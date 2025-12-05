@@ -151,9 +151,36 @@ function gs_tinymce_header(){
 		}
 	}
 
+	$filebrowser_url = $GLOBALS['SITEURL'] . 'plugins/GS-TinyMCE/filebrowser/filebrowser.php';
+
 	echo '
 <script>
 (function(){
+	// File browser callback function for TinyMCE 6
+	function tinymceFileBrowser(callback, value, meta) {
+		var filetype = meta.filetype || "file";
+		var url = "' . $filebrowser_url . '?type=" + filetype;
+		
+		// Open file browser in a modal
+		tinymce.activeEditor.windowManager.openUrl({
+			title: "File Browser",
+			url: url,
+			width: 900,
+			height: 600,
+			onMessage: function(api, message) {
+				if (message.mceAction === "fileSelected") {
+					// Call the callback with the selected file
+					callback(message.url, {
+						text: message.title || message.alt || "",
+						alt: message.alt || "",
+						title: message.title || ""
+					});
+					api.close();
+				}
+			}
+		});
+	}
+
 	function removeCK(){
 		try{
 			if(window.CKEDITOR && CKEDITOR.instances){
@@ -171,7 +198,12 @@ function gs_tinymce_header(){
 		setTimeout(function(){
 			if(typeof tinymce !== "undefined"){
 				tinymce.remove();
-				tinymce.init(' . $json_cfg . ');
+				
+				// Parse the config and add the file_picker_callback
+				var config = ' . $json_cfg . ';
+				config.file_picker_callback = tinymceFileBrowser;
+				
+				tinymce.init(config);
 			}
 		},50);
 	}
