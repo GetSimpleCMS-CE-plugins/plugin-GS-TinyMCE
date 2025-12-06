@@ -469,10 +469,12 @@ $LANG_header = preg_replace('/(?:(?<=([a-z]{2}))).*/', '', $LANG);
                             } else {
                                 $size = $ss['size'];
                                 $units = array('B', 'KB', 'MB', 'GB');
-                                for ($i = 0; $size > 1024; $i++) {
+                                $unitIndex = 0;
+                                while ($size > 1024 && $unitIndex < count($units) - 1) {
                                     $size /= 1024;
+                                    $unitIndex++;
                                 }
-                                $filesArray[$count]['size'] = round($size, 2) . ' ' . $units[$i];
+                                $filesArray[$count]['size'] = round($size, 2) . ' ' . $units[$unitIndex];
                             }
                             
                             // Build the full URL to the file
@@ -581,7 +583,7 @@ $LANG_header = preg_replace('/(?:(?<=([a-z]{2}))).*/', '', $LANG);
                         // Additional actions for images
                         if ($filterType === 'image') {
                             echo '<br><small style="color: #666;">';
-                            echo '<a href="javascript:void(0)" onclick="previewImage(\'' . htmlspecialchars($fileUrl, ENT_QUOTES) . '\', \'' . htmlspecialchars($fileName, ENT_QUOTES) . '\')" style="color: #3498db;">👁 Preview</a>';
+                            //echo '<a href="javascript:void(0)" onclick="previewImage(\'' . htmlspecialchars($fileUrl, ENT_QUOTES) . '\', \'' . htmlspecialchars($fileName, ENT_QUOTES) . '\')" style="color: #3498db;">👁 Preview</a>';
                             
                             // Check for thumbnail version
                             if (defined('GSDATATHUMBPATH')) {
@@ -596,7 +598,8 @@ $LANG_header = preg_replace('/(?:(?<=([a-z]{2}))).*/', '', $LANG);
                         echo '</td>';
                         
                         // File size
-                        echo '<td><span class="file-info">' . htmlspecialchars($fileSize) . '</span></td>';
+                        $displaySize = strip_tags($fileSize); // Remove any HTML tags from size
+                        echo '<td><span class="file-info">' . htmlspecialchars($displaySize) . '</span></td>';
                         
                         // File date
                         echo '<td><span class="file-info">' . htmlspecialchars($fileDate) . '</span></td>';

@@ -9,9 +9,9 @@ $thisfile = basename(__FILE__, '.php');
 register_plugin(
 	$thisfile,
 	'GS-TinyMCE',
-	'0.6',
+	'1.0',
 	'CE Team',
-	'https://www.getsimple-ce.ovh/',
+	'https://www.getsimple-ce.ovh/ce-plugins',
 	'Replace the admin CKEditor with TinyMCE.',
 	'plugins',
 	'gs_tinymce'
@@ -27,7 +27,7 @@ $GS_TINYMCE_SETTINGS = $GS_TINYMCE_DATA_DIR . '/gs-tinymce.json';
 $default_settings = array(
 	'selector' => '#post-body, #post-content, #content, #codetext',
 	'plugins'  => 'link image code lists paste table wordcount',
-	'toolbar'  => 'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent | link image | table | code',
+	'toolbar'  => 'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent | link image media| table | code',
 	'menubar'  => true,
 	'relative_urls' => false,
 	'use_cdn'  => false,
@@ -88,6 +88,57 @@ function gs_tinymce_header(){
 
 	$version = isset($settings['tinymce_version']) ? $settings['tinymce_version'] : '6';
 
+	// Build link list from GetSimple pages with categories
+	$linkList = array();
+	
+	// Add "Custom URL" option
+	$linkList[] = array('title' => '-- Custom URL --', 'value' => '');
+	
+	// Get all page files
+	$pageFiles = glob(GSDATAPAGESPATH . '*.xml');
+	$pages = array();
+	
+	if ($pageFiles) {
+		foreach ($pageFiles as $file) {
+			$data = getXML($file);
+			if ($data) {
+				$pages[] = array(
+					'title' => (string)$data->title,
+					'url' => (string)$data->url,
+					'menuStatus' => (string)$data->menuStatus,
+					'menuOrder' => (int)$data->menuOrder
+				);
+			}
+		}
+		
+		// Sort by menu order
+		usort($pages, function($a, $b) {
+			return $a['menuOrder'] - $b['menuOrder'];
+		});
+		
+		// Add pages category header
+		if (count($pages) > 0) {
+			$linkList[] = array('title' => '-- Pages --', 'value' => '', 'menu' => array());
+			
+			// Build link list for pages
+			foreach ($pages as $page) {
+				$pageUrl = $GLOBALS['SITEURL'] . ($page['url'] == 'index' ? '' : $page['url']);
+				$linkList[] = array(
+					'title' => '   ' . $page['title'],
+					'value' => $pageUrl
+				);
+			}
+		}
+	}
+	
+	// Add special link types
+	$linkList[] = array('title' => '-- Special Links --', 'value' => '');
+	$linkList[] = array('title' => '   Email', 'value' => 'mailto:email@example.com');
+	$linkList[] = array('title' => '   Phone', 'value' => 'tel:+1234567890');
+	$linkList[] = array('title' => '   Anchor', 'value' => '#anchor-name');
+	
+	$linkListJson = json_encode($linkList);
+
 	// Determine TinyMCE source
 	if($settings['use_cdn']){
 		$cdn_key = !empty($settings['cdn_key']) ? $settings['cdn_key'] : 'no-api-key';
@@ -117,6 +168,7 @@ function gs_tinymce_header(){
 
 	$plugins_string = implode(' ', $plugins_list);
 
+	// Build basic config (without file_picker_callback which can't be JSON encoded)
 	$cfg = array(
 		'selector' => $settings['selector'],
 		'plugins'  => $plugins_string,
@@ -127,7 +179,27 @@ function gs_tinymce_header(){
 		'relative_urls' => (bool)$settings['relative_urls'],
 		'promotion'  => false,
 		'branding'   => false,
-		'language'   => $settings['language']
+		'language'   => $settings['language'],
+		'image_title' => true,
+		'image_class_list' => array(
+			array('title' => 'None', 'value' => ''),
+			array('title' => 'Responsive', 'value' => 'img-responsive'),
+			array('title' => 'Fluid', 'value' => 'img-fluid'),
+			array('title' => 'Rounded', 'value' => 'rounded'),
+			array('title' => 'Circle', 'value' => 'rounded-circle'),
+			array('title' => 'Thumbnail', 'value' => 'img-thumbnail'),
+			array('title' => 'Float Left', 'value' => 'float-left'),
+			array('title' => 'Float Right', 'value' => 'float-right'),
+			array('title' => 'Center', 'value' => 'mx-auto d-block')
+		),
+		'link_title' => true,
+		'link_target_list' => array(
+			array('title' => 'None', 'value' => ''),
+			array('title' => 'New window', 'value' => '_blank'),
+			array('title' => 'Same window', 'value' => '_self')
+		),
+		'extended_valid_elements' => 'img[class|src|border=0|alt|title|hspace|vspace|width|height|align|onmouseover|onmouseout|name|style],a[href|target|title|class|rel]',
+		'link_list' => '__GS_LINK_LIST__'  // Placeholder to be replaced
 	);
 
 	if (!empty($settings['autoresize'])) {
@@ -139,6 +211,9 @@ function gs_tinymce_header(){
 	}
 
 	$json_cfg = json_encode($cfg);
+	
+	// Replace the placeholder with actual link list
+	$json_cfg = str_replace('"__GS_LINK_LIST__"', $linkListJson, $json_cfg);
 
 	echo "\n<!-- GS-TinyMCE plugin -->\n";
 	echo '<script src="' . htmlspecialchars((string)$src) . '" referrerpolicy="origin"></script>' . "\n";
@@ -202,6 +277,23 @@ function gs_tinymce_header(){
 				// Parse the config and add the file_picker_callback
 				var config = ' . $json_cfg . ';
 				config.file_picker_callback = tinymceFileBrowser;
+				
+				// Add setup to enable class editing in Advanced tab
+				config.setup = function(editor) {
+					// Track changes for unsaved notification
+					editor.on("init", function() {
+						editor.on("change keyup paste", function() {
+							try {
+								jQuery("#editform #post-content").trigger("change");
+								if (typeof pageisdirty !== "undefined") pageisdirty = false;
+								if (typeof warnme !== "undefined") warnme = true;
+								if (typeof autoSaveInd === "function") autoSaveInd();
+							} catch(e) {
+								// Silently fail if functions dont exist yet
+							}
+						});
+					});
+				};
 				
 				tinymce.init(config);
 			}
@@ -405,4 +497,3 @@ echo '</select>
 }
 
 ?>
-	
