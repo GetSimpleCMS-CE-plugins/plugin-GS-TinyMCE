@@ -176,7 +176,6 @@ function gs_tinymce_header(){
 		'toolbar_mode' => isset($settings['toolbar_mode']) ? $settings['toolbar_mode'] : 'wrap',
 		'toolbar_sticky' => true,
 		'menubar'  => (bool)$settings['menubar'],
-		'relative_urls' => (bool)$settings['relative_urls'],
 		'promotion'  => false,
 		'branding'   => false,
 		'language'   => $settings['language'],
@@ -201,6 +200,26 @@ function gs_tinymce_header(){
 		'extended_valid_elements' => 'img[class|src|border=0|alt|title|hspace|vspace|width|height|align|onmouseover|onmouseout|name|style],a[href|target|title|class|rel]',
 		'link_list' => '__GS_LINK_LIST__'  // Placeholder to be replaced
 	);
+
+	// Ensure SITEURL has trailing slash for TinyMCE
+	$site_url = rtrim($GLOBALS['SITEURL'], '/') . '/';
+
+	// Configure URL handling based on relative_urls setting
+	if ($settings['relative_urls']) {
+		// When "relative URLs" is enabled, we want root-relative paths starting from site root
+		// e.g., /demo/data/uploads/a.jpg (includes the subdirectory if site is in one)
+		$cfg['relative_urls'] = false;  // Counter-intuitive but correct!
+		$cfg['remove_script_host'] = true;  // Removes domain, keeps path from root
+		$cfg['document_base_url'] = $site_url;
+		$cfg['convert_urls'] = true;
+	} else {
+		// When disabled, use absolute URLs with full domain
+		// e.g., https://example/data/uploads/a.jpg
+		$cfg['relative_urls'] = false;
+		$cfg['remove_script_host'] = false;
+		$cfg['document_base_url'] = $site_url;
+		$cfg['convert_urls'] = true;
+	}
 
 	if (!empty($settings['autoresize'])) {
 		$cfg['min_height'] = (int)$settings['height'];
@@ -352,27 +371,30 @@ function gs_tinymce(){
 	echo '
 <style>
 	table tr,td {border-bottom: 0!important; border-top: 0!important;}
-		.w3-parent hr {important;margin: 10px 0!important;}
+	.w3-parent hr {important;margin: 10px 0!important;}
 </style>';
 
 	echo '
 <div class="w3-parent">
-<header class="w3-container w3-border-bottom w3-margin-bottom">
-	<h3>GS-TinyMCE Settings</h3>
-</header>
+	<header class="w3-container w3-border-bottom w3-margin-bottom">
+		<h3>GS-TinyMCE Settings</h3>
+	</header>
 
-<form method="post">
-<table class="form-table">
+	<form method="post">
+		<table class="form-table">
 
-<tr>
-<th>Presets</th>
-<td>
-	<button type="button" class="w3-btn w3-round-large w3-aqua" onclick="tinymcePreset(\'basic\')">Basic</button>
-	<button type="button" class="w3-btn w3-round-large w3-blue" onclick="tinymcePreset(\'classic\')">Default</button>
-	<button type="button" class="w3-btn w3-round-large w3-indigo" onclick="tinymcePreset(\'full\')">Advanced</button>
-	<br><small>Click to auto-fill the Plugins and Toolbar fields.</small>
-</td>
-</tr>
+			<tr>
+				<th>Presets</th>
+				<td>
+					<button type="button" class="w3-btn w3-round-large w3-aqua" onclick="tinymcePreset(\'basic\')">Basic</button>
+					
+					<button type="button" class="w3-btn w3-round-large w3-blue" onclick="tinymcePreset(\'classic\')">Default</button>
+					
+					<button type="button" class="w3-btn w3-round-large w3-indigo" onclick="tinymcePreset(\'full\')">Advanced</button>
+					
+					<br><small>Click to auto-fill the Plugins and Toolbar fields.</small>
+				</td>
+			</tr>
 
 <script>
 function tinymcePreset(type){
@@ -396,102 +418,120 @@ function tinymcePreset(type){
 }
 </script>
 
-<tr>
-<th>Plugins</th>
-<td><input type="text" name="plugins" value="' . htmlspecialchars($settings['plugins']) . '" style="width:95%"/></td>
-</tr>
+			<tr>
+				<th>Plugins</th>
+				<td>
+					<input type="text" name="plugins" value="' . htmlspecialchars($settings['plugins']) . '" style="width:95%"/>
+				</td>
+			</tr>
 
-<tr>
-<th>Toolbar</th>
-<td><input type="text" name="toolbar" value="' . htmlspecialchars($settings['toolbar']) . '" style="width:95%"/></td>
-</tr>
+			<tr>
+				<th>Toolbar</th>
+				<td>
+					<input type="text" name="toolbar" value="' . htmlspecialchars($settings['toolbar']) . '" style="width:95%"/>
+				</td>
+			</tr>
 
-<tr>
-<th>Toolbar Mode</th>
-<td>
-<select name="toolbar_mode" style="width:30%">
-    <option value="wrap"     '.($settings['toolbar_mode']=='wrap'?'selected':'').'>Wrap (default)</option>
-    <option value="sliding"  '.($settings['toolbar_mode']=='sliding'?'selected':'').'>Sliding</option>
-    <option value="floating" '.($settings['toolbar_mode']=='floating'?'selected':'').'>Floating</option>
-    <option value="scrolling" '.($settings['toolbar_mode']=='scrolling'?'selected':'').'>Scrolling</option>
-</select>
-</td>
-</tr>
+			<tr>
+				<th>Toolbar Mode</th>
+				<td>
+				<select name="toolbar_mode" style="width:30%">
+					<option value="wrap"     '.($settings['toolbar_mode']=='wrap'?'selected':'').'>Wrap (default)</option>
+					<option value="sliding"  '.($settings['toolbar_mode']=='sliding'?'selected':'').'>Sliding</option>
+					<option value="floating" '.($settings['toolbar_mode']=='floating'?'selected':'').'>Floating</option>
+					<option value="scrolling" '.($settings['toolbar_mode']=='scrolling'?'selected':'').'>Scrolling</option>
+				</select>
+				</td>
+			</tr>
 
-<tr>
-<th>Enable Auto-resize</th>
-<td><input type="checkbox" name="autoresize" ' . ($settings['autoresize']?'checked':'') . ' /></td>
-</tr>
+			<tr>
+				<th>Enable Auto-resize</th>
+				<td>
+					<input type="checkbox" name="autoresize" ' . ($settings['autoresize']?'checked':'') . ' />
+				</td>
+			</tr>
 
-<tr>
-<th>Show menubar</th>
-<td><input type="checkbox" name="menubar" ' . ($settings['menubar']?'checked':'') . ' /></td>
-</tr>
+			<tr>
+			<th>Show menubar</th>
+				<td>
+					<input type="checkbox" name="menubar" ' . ($settings['menubar']?'checked':'') . ' />
+				</td>
+			</tr>
 
-<tr>
-<th>Relative URLs</th>
-<td><input type="checkbox" name="relative_urls" ' . ($settings['relative_urls']?'checked':'') . ' /></td>
-</tr>
+			<tr>
+				<th>Relative URLs</th>
+				<td>
+					<input type="checkbox" name="relative_urls" ' . ($settings['relative_urls']?'checked':'') . ' />
+				</td>
+			</tr>
 
-<tr>
-<td colspan="2"><hr></td>
-</tr>
+			<tr>
+				<td colspan="2"><hr></td>
+			</tr>
 
-<tr>
-<th>Language</th>
-<td>
-<select name="language" style="width:20%">';
-foreach($langs as $code){
-	echo '<option value="'.$code.'" '.($settings['language']==$code?'selected':'').'>'.$code.'</option>';
-}
-echo '</select>
-</td>
-</tr>
+			<tr>
+				<th>Language</th>
+				<td>
+					<select name="language" style="width:20%">';
+					foreach($langs as $code){
+						echo '<option value="'.$code.'" '.($settings['language']==$code?'selected':'').'>'.$code.'</option>';
+					}
+					echo '</select>
+				</td>
+			</tr>
 
-<tr>
-<th>Editor Minimum Height</th>
-<td>
-<input type="number" name="height" value="' . htmlspecialchars($settings['height']) . '" style="width:20%"/>
-</td>
-</tr>
+			<tr>
+				<th>Editor Minimum Height</th>
+				<td>
+					<input type="number" name="height" value="' . htmlspecialchars($settings['height']) . '" style="width:20%"/>
+				</td>
+			</tr>
 
-<tr>
-<th>Bottom Margin</th>
-<td>
-<input type="number" name="autoresize_bottom_margin" value="' . htmlspecialchars($settings['autoresize_bottom_margin']) . '" style="width:20%"/>
-</td>
-</tr>
+			<tr>
+				<th>Bottom Margin</th>
+				<td>
+					<input type="number" name="autoresize_bottom_margin" value="' . htmlspecialchars($settings['autoresize_bottom_margin']) . '" style="width:20%"/>
+				</td>
+			</tr>
 
-<tr><td colspan="2"><hr></td></tr>
+			<tr><td colspan="2"><hr></td></tr>
 
-<tr>
-<th>TinyMCE Version</th>
-<td><input type="number" name="tinymce_version" value="' . htmlspecialchars($settings['tinymce_version']) . '" style="width:20%"/></td>
-</tr>
+			<tr>
+				<th>TinyMCE Version</th>
+				<td>
+					<input type="number" name="tinymce_version" value="' . htmlspecialchars($settings['tinymce_version']) . '" style="width:20%"/>
+				</td>
+			</tr>
 
-<tr>
-<th>Selector</th>
-<td><input type="text" name="selector" value="' . htmlspecialchars($settings['selector']) . '" style="width:95%"/></td>
-</tr>
+			<tr>
+				<th>Selector</th>
+				<td>
+					<input type="text" name="selector" value="' . htmlspecialchars($settings['selector']) . '" style="width:95%"/>
+				</td>
+			</tr>
 
-<tr>
-<th>Use CDN</th>
-<td><input type="checkbox" name="use_cdn" ' . ($settings['use_cdn']?'checked':'') . ' /></td>
-</tr>
+			<tr>
+				<th>Use CDN</th>
+				<td>
+					<input type="checkbox" name="use_cdn" ' . ($settings['use_cdn']?'checked':'') . ' />
+				</td>
+			</tr>
 
-<tr>
-<th>CDN API Key</th>
-<td><input type="text" name="cdn_key" value="' . htmlspecialchars($settings['cdn_key']) . '" style="width:95%"/></td>
-</tr>
+			<tr>
+				<th>CDN API Key</th>
+				<td>
+					<input type="text" name="cdn_key" value="' . htmlspecialchars($settings['cdn_key']) . '" style="width:95%"/>
+				</td>
+			</tr>
 
-<tr>
-<td colspan="2"><hr></td>
-</tr>
+			<tr>
+				<td colspan="2"><hr></td>
+			</tr>
 
-</table>
+		</table>
 
-<p><input type="submit" name="gs_tinymce_save" class="w3-btn w3-round-large w3-green" value="Save settings"/></p>
-</form>
+		<p><input type="submit" name="gs_tinymce_save" class="w3-btn w3-round-large w3-green" value="Save settings"/></p>
+	</form>
 </div>';
 
 }
