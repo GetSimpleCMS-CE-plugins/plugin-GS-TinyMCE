@@ -12,7 +12,7 @@ register_plugin(
 	'1.0',
 	'CE Team',
 	'https://www.getsimple-ce.ovh/ce-plugins',
-	'Replace Pages CKEditor with TinyMCE.',
+	'Replace Pages CKEditor 4 with TinyMCE 6.',
 	'plugins',
 	'gs_tinymce'
 );
@@ -393,7 +393,7 @@ function gs_tinymce(){
 <div class="w3-parent">
 	<header class="w3-container w3-border-bottom w3-margin-bottom">
 		<h3>GS-TinyMCE Settings <svg xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle" width="1.5em" height="1.5em" viewBox="0 0 512 512"><rect width="512" height="512" fill="none"/><path fill="#335DFF" d="m512 221.768l-16.778-16.976l-34.794 34.389L259.251 38.956L0 295.246l16.78 16.975l39.813-39.36l201.169 200.183zM259.195 72.574l184.258 183.384L257.82 439.43L73.567 256.082zm61.412 120.453H196.1v-21.004h124.508zm38.514 51.534H157.585v-21.003H359.12zm0 50.785H157.585v-21.003H359.12zm-39.066 50.785H196.651v-21.003h123.404z"/></svg></h3>
-		<p>Replace Pages CKEditor with TinyMCE.</p>
+		<p>Replace Pages CKEditor 4 with TinyMCE 6</p>
 	</header>
 
 	<form method="post">
