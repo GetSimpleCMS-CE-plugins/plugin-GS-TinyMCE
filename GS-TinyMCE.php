@@ -9,10 +9,10 @@ $thisfile = basename(__FILE__, '.php');
 register_plugin(
 	$thisfile,
 	'GS-TinyMCE',
-	'1.0',
+	'1.1',
 	'CE Team',
 	'https://www.getsimple-ce.ovh/ce-plugins',
-	'Replace Pages CKEditor 4 with TinyMCE 6.',
+	'Replace Pages CKEditor with TinyMCE.',
 	'plugins',
 	'gs_tinymce'
 );
@@ -382,18 +382,22 @@ function gs_tinymce(){
 	}
 	
 	global $USR;
+	global $SITEURL;
+	
+	echo '<link rel="stylesheet" href="' . $SITEURL . 'plugins/massiveAdmin/css/w3.css"/>';
 	
 	echo '
 <style>
 	table tr,td {border-bottom: 0!important; border-top: 0!important;} .w3-btn{margin-right: 5px !important;}
 	.w3-parent hr {important;margin: 10px 0!important;} .hide{display:none;}
+	.upcke{display:none !important}
 </style>';
 
 	echo '
 <div class="w3-parent">
 	<header class="w3-container w3-border-bottom w3-margin-bottom">
 		<h3>GS-TinyMCE Settings <svg xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle" width="1.5em" height="1.5em" viewBox="0 0 512 512"><rect width="512" height="512" fill="none"/><path fill="#335DFF" d="m512 221.768l-16.778-16.976l-34.794 34.389L259.251 38.956L0 295.246l16.78 16.975l39.813-39.36l201.169 200.183zM259.195 72.574l184.258 183.384L257.82 439.43L73.567 256.082zm61.412 120.453H196.1v-21.004h124.508zm38.514 51.534H157.585v-21.003H359.12zm0 50.785H157.585v-21.003H359.12zm-39.066 50.785H196.651v-21.003h123.404z"/></svg></h3>
-		<p>Replace Pages CKEditor 4 with TinyMCE 6</p>
+		<p>Replace Pages CKEditor with TinyMCE.</p>
 	</header>
 
 	<form method="post">
@@ -448,21 +452,21 @@ function tinymcePreset(type){
 			<tr>
 				<th>Plugins</th>
 				<td>
-					<input type="text" name="plugins" value="' . htmlspecialchars($settings['plugins']) . '" style="width:95%"/>
+					<input class="w3-input w3-border w3-round" type="text" name="plugins" value="' . htmlspecialchars($settings['plugins']) . '" style="width:95%"/>
 				</td>
 			</tr>
 
 			<tr>
 				<th>Toolbar</th>
 				<td>
-					<input type="text" name="toolbar" value="' . htmlspecialchars($settings['toolbar']) . '" style="width:95%"/>
+					<input class="w3-input w3-border w3-round" type="text" name="toolbar" value="' . htmlspecialchars($settings['toolbar']) . '" style="width:95%"/>
 				</td>
 			</tr>
 
 			<tr>
 				<th>Toolbar Mode</th>
 				<td>
-				<select name="toolbar_mode" style="width:30%">
+				<select class="w3-input w3-border w3-round" name="toolbar_mode" style="width:30%">
 					<option value="wrap"     '.($settings['toolbar_mode']=='wrap'?'selected':'').'>Wrap (default)</option>
 					<option value="sliding"  '.($settings['toolbar_mode']=='sliding'?'selected':'').'>Sliding</option>
 					<option value="floating" '.($settings['toolbar_mode']=='floating'?'selected':'').'>Floating</option>
@@ -474,21 +478,21 @@ function tinymcePreset(type){
 			<tr>
 				<th>Enable Auto-resize</th>
 				<td>
-					<input type="checkbox" name="autoresize" ' . ($settings['autoresize']?'checked':'') . ' />
+					<input class="w3-check" type="checkbox" name="autoresize" ' . ($settings['autoresize']?'checked':'') . ' />
 				</td>
 			</tr>
 
 			<tr>
 			<th>Show menubar</th>
 				<td>
-					<input type="checkbox" name="menubar" ' . ($settings['menubar']?'checked':'') . ' />
+					<input class="w3-check" type="checkbox" name="menubar" ' . ($settings['menubar']?'checked':'') . ' />
 				</td>
 			</tr>
 
 			<tr>
 				<th>Relative URLs</th>
 				<td>
-					<input type="checkbox" name="relative_urls" ' . ($settings['relative_urls']?'checked':'') . ' />
+					<input class="w3-check" type="checkbox" name="relative_urls" ' . ($settings['relative_urls']?'checked':'') . ' />
 				</td>
 			</tr>
 
@@ -499,7 +503,7 @@ function tinymcePreset(type){
 			<tr>
 				<th>Language</th>
 				<td>
-					<select name="language" style="width:20%">';
+					<select class="w3-input w3-border w3-round" name="language" style="width:20%">';
 					foreach($langs as $code){
 						echo '<option value="'.$code.'" '.($settings['language']==$code?'selected':'').'>'.$code.'</option>';
 					}
@@ -510,14 +514,14 @@ function tinymcePreset(type){
 			<tr>
 				<th>Editor Minimum Height</th>
 				<td>
-					<input type="number" name="height" value="' . htmlspecialchars($settings['height']) . '" style="width:20%"/>
+					<input class="w3-input w3-border w3-round" type="number" name="height" value="' . htmlspecialchars($settings['height']) . '" style="width:20%"/>
 				</td>
 			</tr>
 
 			<tr>
 				<th>Bottom Margin</th>
 				<td>
-					<input type="number" name="autoresize_bottom_margin" value="' . htmlspecialchars($settings['autoresize_bottom_margin']) . '" style="width:20%"/>
+					<input class="w3-input w3-border w3-round" type="number" name="autoresize_bottom_margin" value="' . htmlspecialchars($settings['autoresize_bottom_margin']) . '" style="width:20%"/>
 				</td>
 			</tr>
 
@@ -526,14 +530,14 @@ function tinymcePreset(type){
 			<tr class="hide">
 				<th>Sections</th>
 				<td>
-					<input type="text" name="sections" value="' . htmlspecialchars($settings['sections']) . '" style="width:95%"/>
+					<input class="w3-input w3-border w3-round" type="text" name="sections" value="' . htmlspecialchars($settings['sections']) . '" style="width:95%"/>
 				</td>
 			</tr>
 			
 			<tr class="hide">
 				<th>Selector</th>
 				<td>
-					<input type="text" name="selector" value="' . htmlspecialchars($settings['selector']) . '" style="width:95%"/>
+					<input class="w3-input w3-border w3-round" type="text" name="selector" value="' . htmlspecialchars($settings['selector']) . '" style="width:95%"/>
 				</td>
 			</tr>
 			
@@ -542,21 +546,21 @@ function tinymcePreset(type){
 			<tr>
 				<th>TinyMCE Version</th>
 				<td>
-					<input type="number" name="tinymce_version" value="' . htmlspecialchars($settings['tinymce_version']) . '" style="width:20%"/>
+					<input class="w3-input w3-border w3-round" type="number" name="tinymce_version" value="' . htmlspecialchars($settings['tinymce_version']) . '" style="width:20%"/>
 				</td>
 			</tr>
 
 			<tr>
 				<th>Use CDN</th>
 				<td>
-					<input type="checkbox" name="use_cdn" ' . ($settings['use_cdn']?'checked':'') . ' />
+					<input class="w3-check" type="checkbox" name="use_cdn" ' . ($settings['use_cdn']?'checked':'') . ' />
 				</td>
 			</tr>
 
 			<tr>
 				<th>CDN API Key</th>
 				<td>
-					<input type="text" name="cdn_key" value="' . htmlspecialchars($settings['cdn_key']) . '" style="width:95%"/>
+					<input class="w3-input w3-border w3-round" type="text" name="cdn_key" value="' . htmlspecialchars($settings['cdn_key']) . '" style="width:95%"/>
 				</td>
 			</tr>
 
