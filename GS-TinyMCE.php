@@ -9,7 +9,7 @@ $thisfile = basename(__FILE__, '.php');
 register_plugin(
 	$thisfile,
 	'GS-TinyMCE',
-	'1.1',
+	'1.2',
 	'CE Team',
 	'https://www.getsimple-ce.ovh/ce-plugins',
 	'Replace Pages CKEditor with TinyMCE.',
